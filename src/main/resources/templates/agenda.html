@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda</title>
+</head>
+<body>
+
+<h1>Agenda de Comprissos</h1>
+
+<form id="form">
+    <input type="date" id="data" required>
+    <input type="time" id="horario" required>
+    <input type="text" id="descricao" placeholder="Descrição" required>
+    <button type="submit">Marcar</button>
+</form>
+
+<hr>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Data</th>
+        <th>Horário</th>
+        <th>Descrição</th>
+        <th>Status</th>
+        <th>Ação</th>
+    </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+</table>
+
+<script>
+    const API = "/api/agenda";
+
+    function carregar() {
+        fetch(API)
+            .then(r => r.json())
+            .then(dados => {
+                lista.innerHTML = "";
+                dados.forEach(c => {
+                    lista.innerHTML += `
+                        <tr>
+                            <td>${c.data}</td>
+                            <td>${c.horario}</td>
+                            <td>${c.descricao}</td>
+                            <td>${c.cancelado ? "Cancelado" : "Ativo"}</td>
+                            <td>
+                                ${!c.cancelado
+                                    ? `<button onclick="cancelar('${c.id}')">Cancelar</button>`
+                                    : ""}
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    form.onsubmit = e => {
+        e.preventDefault();
+        fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                data: data.value,
+                horario: horario.value,
+                descricao: descricao.value
+            })
+        }).then(() => {
+            form.reset();
+            carregar();
+        });
+    };
+
+    function cancelar(id) {
+        fetch(`${API}/${id}/cancelar`, { method: "PUT" })
+            .then(() => carregar());
+    }
+
+    carregar();
+</script>
+
+</body>
+</html>
